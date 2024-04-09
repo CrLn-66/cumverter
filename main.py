@@ -8,8 +8,8 @@ import shutil
 import rawpy
 import imageio
 
-upload_folder = os.getcwd() + "\\uploads"
-this = os.getcwd() + "\\"
+upload_folder = os.getcwd() + "/uploads"
+this = os.getcwd() + "/"
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = upload_folder 
 socketio = SocketIO(app)
@@ -27,17 +27,17 @@ def on_disconnect():
     print('Client disconnected')
 
 def convert(folder, format, id, total):
-    os.mkdir(os.path.join(this+"output\\", id))
+    os.mkdir(os.path.join(this+"output/", id))
     for i, file in enumerate(os.listdir(folder)):
         print(file)
         filepath = os.path.join(folder, file) 
         socketio.emit('progress', {'id': id,'total_images': total, "current": i, "dlurl": "null"})
         a = rawpy.imread(filepath).postprocess()
-        out = os.path.join(this+"output\\", f"{id}\\")
+        out = os.path.join(this+"output/", f"{id}/")
         imageio.imsave(f"{out}{i}.{format}", a)
     
     if total < 2:
-        shutil.move(f"{out}0.{format}", this+"static\\"+ f"0.{format}")
+        shutil.move(f"{out}0.{format}", this+"static/"+ f"0.{format}")
         urk = url_for('static', filename=f"0.{format}")
         print(urk)
         socketio.emit('progress', {'id': id,'total_images': total, "current": i+1, "dlurl": urk})
@@ -57,13 +57,13 @@ def convertweb():
     total_images = len(files)
     # Start conversion in a background thread
     uid = str(uuid.uuid1())
-    os.mkdir(app.config['UPLOAD_FOLDER'] + f"\\{uid}")
+    os.mkdir(app.config['UPLOAD_FOLDER'] + f"/{uid}")
     for i, file in enumerate(files):
         filename = file.filename
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'] + f"\\{uid}", filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'] + f"/{uid}", filename)
         file.save(filepath)
         
-    convert(app.config['UPLOAD_FOLDER'] + f"\\{uid}\\", output_format, uid, total_images)
+    convert(app.config['UPLOAD_FOLDER'] + f"/{uid}/", output_format, uid, total_images)
     return "Conversion started!"
 
 @app.route('/')
@@ -71,6 +71,6 @@ def index():
     return render_template("index.html")
 
 def zip_files(folder):
-    shutil.make_archive(os.path.join(this, f"static\\{folder}"), "zip", this +  f"output\\{folder}")
+    shutil.make_archive(os.path.join(this, f"static/{folder}"), "zip", this +  f"output/{folder}")
 if __name__ == '__main__':
     socketio.run(app, debug=True) 
